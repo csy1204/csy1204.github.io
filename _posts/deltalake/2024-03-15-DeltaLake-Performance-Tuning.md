@@ -6,7 +6,7 @@ tags: [DeltaLake, Performance, DataEngineering]     # TAG names should always be
 ---
 
 
-# Chapter 6 Performance Tuning: Optimizing Your Data Pipelines with Delta Lake
+> Performance Tuning: Optimizing Your Data Pipelines with Delta Lake
 
 - 먼저 성능의 목적에 대해 고민해보고 각각의 고려 사항 들이 목적에 어떻게 영향을 미치는지 알아볼 예정
 - 각 기능들에서 주요 파라미터와 그것이 어떤 상관관계와 트레이드 오프가 있는지 알아보자
