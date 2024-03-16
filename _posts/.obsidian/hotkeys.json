@@ -1,0 +1,11 @@
+{
+  "templater-obsidian:template/_post_template.md": [
+    {
+      "modifiers": [
+        "Mod",
+        "Shift"
+      ],
+      "key": "I"
+    }
+  ]
+}

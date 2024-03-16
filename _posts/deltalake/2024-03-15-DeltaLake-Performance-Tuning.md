@@ -18,15 +18,15 @@ tags: [DeltaLake, Performance, DataEngineering]     # TAG names should always be
 - 데이터 소비자 입장에선 Read 성능이 중요
 - 대부분의 쿼리는 3가지 패턴으로 볼 수 있음
 - **Point Queries**
-    - 특정 싱글 레코드를 반환하는 쿼리
-    - 해결책: 파일사이즈, 인덱싱, 파티셔닝
+  - 특정 싱글 레코드를 반환하는 쿼리
+  - 해결책: 파일사이즈, 인덱싱, 파티셔닝
 - **Range Queries**
-    - 특정 범위로 검색하여 레코드 집합을 반환하는 쿼리
-    - 꼭 범위가 아니더라도 카테고리성 검색도 포함
+  - 특정 범위로 검색하여 레코드 집합을 반환하는 쿼리
+  - 꼭 범위가 아니더라도 카테고리성 검색도 포함
 - **Aggregations**
-    - 범위 쿼리(Range Query)에 추가적인 연산이 포함된 쿼리
-    - 범위 쿼리 같은 최적화 방식으로 성능 향상을 이끌어낼 수 있음
-    - 사용하는 쿼리 패턴에 맞게 인덱싱, 파티셔닝이 필요
+  - 범위 쿼리(Range Query)에 추가적인 연산이 포함된 쿼리
+  - 범위 쿼리 같은 최적화 방식으로 성능 향상을 이끌어낼 수 있음
+  - 사용하는 쿼리 패턴에 맞게 인덱싱, 파티셔닝이 필요
 - 결론: 데이터 소비 방식에 맞게 데이터 전략을 Align해야 최상의 성능을 전달할 수 있음
 
 ## 6.1.2. Maximizing Write Performance
@@ -35,13 +35,13 @@ tags: [DeltaLake, Performance, DataEngineering]     # TAG names should always be
 - 다양한 소스에서 어떤 주기로 데이터를 가져오고 용량이나 여러 측면을 고려할 필요가 있음
 - 데이터를 제공받는 경우 제어권이 없어 발생하는 제약사항도 있을 수 있음
 - **Trade-Offs**
-    - 쓰기 과정에서의 제약사항은 주로 생산자 시스템에 의해 결정됨
-    - 싱글 노드냐 분산 시스템을 선택하냐에 있어 흐름이 중요 (시간과 연산량에 대한 트레이드 오프)
-    - 결국 메달리온 아키텍쳐를 통해 이러한 흐름을 분리하여 잘 관리하자는 얘기
+  - 쓰기 과정에서의 제약사항은 주로 생산자 시스템에 의해 결정됨
+  - 싱글 노드냐 분산 시스템을 선택하냐에 있어 흐름이 중요 (시간과 연산량에 대한 트레이드 오프)
+  - 결국 메달리온 아키텍쳐를 통해 이러한 흐름을 분리하여 잘 관리하자는 얘기
 - **Conflict Avoidance**
-    - 쓰기 작업이 얼마나 자주 일어나느냐에 따라 유지보수성 작업에 영향을 미침 (e.g. Z-order)
-    - Spark Streaming 같은 마이크로 배치 작업시 파티션의 활성 여부를 고려해야함
-    - Compaction, Indexing, Optimized Writes 같은 성능을 위한 작업도 다른 작업 시기에 영향을 미침
+  - 쓰기 작업이 얼마나 자주 일어나느냐에 따라 유지보수성 작업에 영향을 미침 (e.g. Z-order)
+  - Spark Streaming 같은 마이크로 배치 작업시 파티션의 활성 여부를 고려해야함
+  - Compaction, Indexing, Optimized Writes 같은 성능을 위한 작업도 다른 작업 시기에 영향을 미침
 
 # 6.2. Performance Considerations
 
@@ -100,7 +100,7 @@ deltaTable.optimize().where("date='2021-11-18'").executeCompaction()
 - 높은 카디널리티를 가지는 컬럼을 선택하면 좋음
 - 파일 내부에서 정렬이 되기 때문에 파티셔닝과 같이 적용할 수 있고 여러 컬럼 선택도 가능
 - compact와 z-order 모두 멱등하지 않지만 증분 처리는 가능하도록 함, 파티션에 새 데이터가 추가되는게 아니라면 기존 파티션은 유지됨
-    - z-order를 새로운 컬럼으로 하게 된다면 전체 클러스터를 재구축하게 됨
+  - z-order를 새로운 컬럼으로 하게 된다면 전체 클러스터를 재구축하게 됨
 - 단점: 모든 insert, delete, update 마다  z-order를 재계산해야함
 
 [Space-filling curve](https://en.wikipedia.org/wiki/Space-filling_curve)
@@ -173,7 +173,7 @@ ALTER TABLE
          delta.`example`
          CHANGE articleDate first;
 ALTER TABLE
-					delta.`example` CHANGE textCol after revisionTimestamp;
+     delta.`example` CHANGE textCol after revisionTimestamp;
 ```
 
 ![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/a03d39bf-c2d4-4aea-9784-3ed35c65b010/9faf7b5e-1950-4a36-b37c-399ab0783dd0/Untitled.png)

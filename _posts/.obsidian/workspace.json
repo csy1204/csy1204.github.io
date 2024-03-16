@@ -1,0 +1,162 @@
+{
+  "main": {
+    "id": "59af9c48f2a91e06",
+    "type": "split",
+    "children": [
+      {
+        "id": "886901bc579cdc74",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "ca81ecede5baad76",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "2024-03-16-sangyeon.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "f94b037370fcc40c",
+    "type": "split",
+    "children": [
+      {
+        "id": "9090b2be01cd8983",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "05dd6c87fb356e06",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "f6e2681813c0aff2",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "039d71e3e4526ee3",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "2a0367f3429f0cdc",
+    "type": "split",
+    "children": [
+      {
+        "id": "df7fadf2264f05d9",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "4995f09044975a56",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "2024-03-16-sangyeon.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "3753abb892b0c2a6",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "2024-03-16-sangyeon.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "4f1c46a0e092be5e",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "b13ba117b1fd3a52",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "2024-03-16-sangyeon.md"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:퀵 스위처 열기": false,
+      "graph:그래프 뷰 열기": false,
+      "canvas:새 캔버스 만들기": false,
+      "daily-notes:오늘의 데일리 노트 열기": false,
+      "templates:템플릿 삽입": false,
+      "command-palette:명령어 팔레트 열기": false,
+      "templater-obsidian:Templater": false
+    }
+  },
+  "active": "ca81ecede5baad76",
+  "lastOpenFiles": [
+    "2024-03-16-sangyeon.md",
+    "template/_post_template.md",
+    "2024-03-16-undefined.md",
+    "2024-03-16undefined.md",
+    "16.3월.2024-18.27.57.md",
+    "2024-03-16.md",
+    "python/dd.md",
+    "template"
+  ]
+}
