@@ -1,5 +1,5 @@
 ---
-title: Delta Lake Performance Tuning: 델타레이크 성능 튜닝의 열쇠
+title: "Delta Lake Performance Tuning: 델타레이크 성능 튜닝의 열쇠"
 date: 2024-03-15T15:39:53 +0900
 categories: [DataEngineering, DeltaLake]
 tags: [DeltaLake, Performance, DataEngineering]     # TAG names should always be lowercase
