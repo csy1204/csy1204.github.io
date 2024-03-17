@@ -45,18 +45,65 @@ def allocate_endpoint():
 | ![](https://i.imgur.com/btD0GVP.png) | ![](https://i.imgur.com/jnV6ULA.png) |
 - 앞서 많이 본 계층 아키텍쳐에서 양파 아키텍쳐로의 변화는 도메인 모델 (가운데 계층)이 그 어떤 의존성도 가지지 않는 것을 목적으로 함
 - 화살표가 의존성의 방향이라고 본다면 `Domain Model`에선 어떤 화살표도 나가지 않음, 다른 레이어가 Model에 의존하는 역전 관계
-- 즉 
- 
-
-
-
+- django의 MVC 구조는 서로 간의 밀접한 관계를 맺고 있음
 ![](https://i.imgur.com/3slSHI6.png)
 > [MVC - MDN Web Docs Glossary: Definitions of Web-related terms | MDN (mozilla.org)](https://developer.mozilla.org/en-US/docs/Glossary/MVC)
 
 
+> 이러한 아키텍쳐가 꼭 포트와 어댑터 패턴, 헥사고날 아키텍쳐와 같은가? 거의 같은 개념이고 의존 관계의 역전이 중요한 포인트이다. {: .prompt-info }
+
 ## 4. 기억 되살리기: 우리가 사용하는 모델
 
+```mermaid
+ classDiagram
+	Batch <-- OrderLine
+	class Batch {
+		reference
+		sku
+		eta
+		_purchased_quantity
+		_allocations
+	}
+	class OrderLine {
+		orderid
+		sku
+		qty
+	}
+```
+- 위와 같은 모델
+
 ### 4.1 '일반적인' ORM 방식: ORM에 의존하는 모델
+
+- DB를 다룰 때 SQL를 직접 작성하는 방식 보다는 ORM을 이용함
+- ORM(Object-Relation Mapping) 객체 관계 매핑이라고 불리는 프레임워크로 
+
+```python
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+
+Base = declarative_base()
+
+
+class Order(Base):
+    id = Column(Integer, primmary_key=True)
+
+class OrderLine(Base):
+    id = Column(Integer, primmary_key=True)
+    sku = Column(String(250))
+    qty = Column(String(250))
+    order_id = Column(Integer, ForeignKey('order.id'))
+    order = relationship(Order)
+
+class Allocation(Base):
+    id = Column(Integer, primmary_key=True)
+    orderline_id = Column(Integer, ForeignKey('order_lines.id'))
+    batch_id = Column(Integer, ForeignKey('batches.id'))
+
+...
+```
+
+
 
 
 ### 4.2 의존성 역전: 모델에 의존하는 ORM
