@@ -230,7 +230,7 @@ tests/chapter02/test_orm.py::test_orderline_mapper_can_save_lines PASSED        
 ============================================================= 2 passed in 0.02s =============================================================
 ```
 
-- 
+-
 
 ## 5. 저장소 패턴 소개
 
@@ -282,8 +282,7 @@ class AbstractRepository(abc.ABC):
 
 ![](https://i.imgur.com/pVHWR5q.png)
 
-
->  출처: [Repository Pattern (cosmicpython.com)](https://www.cosmicpython.com/book/chapter_02_repository.html#_what_is_the_trade_off)
+> 출처: [Repository Pattern (cosmicpython.com)](https://www.cosmicpython.com/book/chapter_02_repository.html#_what_is_the_trade_off)
 
 - 테스트 코드로 Repository를 검증할 예정: 크게 batch wjwk
 
@@ -359,7 +358,7 @@ def test_repository_can_retrieve_a_batch_with_allocations(session):
     }
 ```
 
--  위 테스트를 통과하기 위한 Repository 코드
+- 위 테스트를 통과하기 위한 Repository 코드
 - 기존에는 .one()으로 실행했지만 실제로 사용하기엔 예외가 많이 발생해 limit으로 변경
 
 ```python
@@ -391,7 +390,6 @@ class SqlAlchemyRepository(AbstractRepository):
     def list_all_orderlines(self):
         return self.session.query(model.OrderLine).all()
 ```
-
 
 - 책에선 flask로 작성했지만 FastAPI로 직접 적용해본 코드
 
@@ -465,8 +463,8 @@ class FakeRepository(AbstractRepository):
 ## 7. 파이썬에서 포트와 어댑터란 무엇인가
 
 - 포트와 어댑터는 객체 지향에서 나온 용어
-	- **포트**: 애플리케이션과 추상화하려는 대상 사이의 **인터페이스**
-	- **어댑터**: 인터페이스나 추상화 뒤에 있는 **구현**
+  - **포트**: 애플리케이션과 추상화하려는 대상 사이의 **인터페이스**
+  - **어댑터**: 인터페이스나 추상화 뒤에 있는 **구현**
 - 파이썬은 인터페이스가 없기에 포트를 정의하기 어렵 -> 추상 클래스를 주로 사용
 ![](https://i.imgur.com/eUDHWXw.png)
 
@@ -478,6 +476,7 @@ class FakeRepository(AbstractRepository):
 | 모델과 인프라를 완전히 분리하여 단위 테스트를 위한 Fake Repository를 쉽게 생성 가능           | 수동 ORM 매핑은 공수가 더 필요                                  |
 | 영속성 보다 도메인에 더 집중할 수 있음. 접근 방식을 극적으로 바꿀 때 DB 관련 사항을 염려하지 않고 반영 가능 | 간접 계층을 추가하면 결국 유지보수 비용이 증가                           |
 | 객체를 테이블에 매핑하는 과정에서 원하는 대로 제어 가능하여 DB 스키마를 단순화할 수 있음              |                                                      |
+
 > 앱이 래퍼를 감싸는(?) 단순한 CRUD라면 도메인 모델이나 저장소가 필요로 하지 않음
 
 위와 같은 트레이드 오프를 생각해야하고 복잡성이 낮다면 ORM, 액티브레코드 패턴이 나을 수 있지만, 더 복잡하게 갈 수록 두 패턴보다는 복잡하지만 추후 유지보수성이 좋고 인프라에 대해 유연한 저장소 패턴도 좋은 선택이 될 수 있다.
