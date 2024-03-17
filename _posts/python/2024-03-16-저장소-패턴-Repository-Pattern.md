@@ -285,7 +285,7 @@ class AbstractRepository(abc.ABC):
 
 >  출처: [Repository Pattern (cosmicpython.com)](https://www.cosmicpython.com/book/chapter_02_repository.html#_what_is_the_trade_off)
 
-- 테스트 코드로 위에서 만든 Repository를 검증함
+- 테스트 코드로 Repository를 검증할 예정: 크게 batch wjwk
 
 ```python
 from src.architecture_python.chapter02.database import model
@@ -298,13 +298,15 @@ def test_repository_can_save_a_batch(session):
 
     repo = repository.SqlAlchemyRepository(session)
     repo.add(batch)
-    session.commit()
+    session.commit() # commit의 반복적인 호출이 필요, 6장에서 살펴봄
 
     rows = session.execute(
         text('SELECT reference, sku, _purchased_quantity, eta FROM "batches"')
     )
     assert list(rows) == [("batch1", "RUSTY-SOAPDISH", 100, None)]
+```
 
+```python
 
 def insert_order_line(session):
     session.execute(
@@ -355,12 +357,111 @@ def test_repository_can_retrieve_a_batch_with_allocations(session):
     assert retrieved._allocations == {
         model.OrderLine("order1", "GENERIC-SOFA", 12),
     }
+```
 
+-  위 테스트를 통과하기 위한 Repository 코드
+- 기존에는 .one()으로 실행했지만 실제로 사용하기엔 예외가 많이 발생해 limit으로 변경
+
+```python
+from sqlalchemy.orm import Session
+
+from src.architecture_python.chapter02.database import model
+
+
+class SqlAlchemyRepository(AbstractRepository):
+    def __init__(self, session: Session):
+        self.session = session
+
+    def add(self, batch):
+        self.session.add(batch)
+
+    def get(self, reference) -> model.Batch:
+        batches = (
+            self.session.query(model.Batch)
+            .filter_by(reference=reference)
+            .limit(1)
+            .all()
+        )
+
+        return batches[0] if batches else None
+
+    def list(self):
+        return self.session.query(model.Batch).all()
+
+    def list_all_orderlines(self):
+        return self.session.query(model.OrderLine).all()
 ```
 
 
+- 책에선 flask로 작성했지만 FastAPI로 직접 적용해본 코드
+
+```python
+import logging
+
+from fastapi import Depends, FastAPI, HTTPException
+from sqlalchemy.orm import Session
+
+from src.architecture_python.chapter02.database import model, schema
+from src.architecture_python.chapter02.database.database import SessionLocal
+from src.architecture_python.chapter02.database.repository import SqlAlchemyRepository
+
+logger = logging.getLogger(__name__)
+
+app = FastAPI()
+
+
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@app.post("/allocate")
+def create_allocation(
+    order_line_params: list[schema.CreateOrderLine], db: Session = Depends(get_db)
+):
+    repository = SqlAlchemyRepository(db)
+    batches = repository.list()
+
+    lines = [
+        model.OrderLine(line.orderid, line.sku, line.qty) for line in order_line_params
+    ]
+    
+    for line in lines:
+        try:
+            model.allocate(line, batches)
+        except model.OutOfStock as e:
+            return HTTPException(500, "Out of Stock")
+             
+    db.commit()
+    return 201
+```
 
 ## 6. 테스트에 사용하는 가짜 저장소를 쉽게 만드는 방법
+
+- 사실 이러한 작업의 큰 이점은 아래와 같은 Fake를 쉽게 만들 수 있다는 것에 있다.
+- 덕분에 테스트를 할 때 실제 DB와 연결하거나 로드하지 않고도 로직을 쉽게 점검할 수 있다.
+- SQL의 **직접적인 결합에서 자유롭게 도메인의 비즈니스 로직을 더 쉽게 테스트**할 수 있다는 것!
+
+```python
+class FakeRepository(AbstractRepository):
+
+    def __init__(self, batches):
+        self._batches = set(batches)
+
+    def add(self, batch):
+        self._batches.add(batch)
+
+    def get(self, reference):
+        return next(b for b in self._batches if b.reference == reference)
+
+    def list(self):
+        return list(self._batches)
+```
+
 
 ## 7. 파이썬에서 포트와 어댑터란 무엇인가
 
