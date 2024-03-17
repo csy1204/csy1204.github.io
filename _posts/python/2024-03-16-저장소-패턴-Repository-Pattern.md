@@ -9,3 +9,4 @@ tags:
 
 ![[Pasted image 20240317173515.png]]
 
+![[../_images/Pasted image 20240317173847.png]]
