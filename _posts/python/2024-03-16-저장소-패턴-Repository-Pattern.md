@@ -50,7 +50,8 @@ def allocate_endpoint():
 > [MVC - MDN Web Docs Glossary: Definitions of Web-related terms | MDN (mozilla.org)](https://developer.mozilla.org/en-US/docs/Glossary/MVC)
 
 
-> 이러한 아키텍쳐가 꼭 포트와 어댑터 패턴, 헥사고날 아키텍쳐와 같은가? 거의 같은 개념이고 의존 관계의 역전이 중요한 포인트이다. {: .prompt-info }
+> 이러한 아키텍쳐가 꼭 포트와 어댑터 패턴, 헥사고날 아키텍쳐와 같은가? 거의 같은 개념이고 의존 관계의 역전이 중요한 포인트이다.
+{: .prompt-info }
 
 ## 4. 기억 되살리기: 우리가 사용하는 모델
 
@@ -113,7 +114,11 @@ class Allocation(Base):
 
 - 바로 스키마를 별도로 정의하고 스키마 - 도메인 모델을 상호 변환하는 매퍼를 활용
 	- 이러한 맵퍼를 고전적 맵퍼라고 함
-	- 
+- 책에 있는 내용은 지금은 deprecated된 코드로 2.0에 맞는 코드로 변환이 필요
+- [ORM Mapped Class Overview — SQLAlchemy 2.0 Documentation](https://docs.sqlalchemy.org/en/20/orm/mapping_styles.html#imperative-mapping)
+
+> Changed in version 2.0: The [`registry.map_imperatively()`](https://docs.sqlalchemy.org/en/20/orm/mapping_api.html#sqlalchemy.orm.registry.map_imperatively "sqlalchemy.orm.registry.map_imperatively") method is now used to create classical mappings. The `sqlalchemy.orm.mapper()` standalone function is effectively removed. 
+{: .prompt-danger }
 
 ```python
 from sqlalchemy import Table, MetaData, Column, Integer, String, Date, ForeignKey
@@ -164,17 +169,90 @@ def start_mappers():
             )
         },
     )
+    # Mapper가 마법처럼 Domain Model과 연결한다.
 
 ```
 
+- 테스트를 통해 위 코드를 검증할 수 있음
+- 코드를 통해 도메인 모델을 자유롭게 생성 및 요청할 수 있음, SQL에 대한 동작에서 자유로움
+
+```python
+from src.architecture_python.chapter02.database import model
+from datetime import date
+from sqlalchemy.sql import text
+import logging
+
+logger = logging.getLogger()
 
 
+def test_orderline_mapper_can_load_lines(session):
+    session.execute(text(
+        "INSERT INTO order_lines (orderid, sku, qty) VALUES "
+        '("order1", "RED-CHAIR", 12),'
+        '("order1", "RED-TABLE", 13),'
+        '("order2", "BLUE-LIPSTICK", 14)'
+    ))
+    expected = [
+        model.OrderLine("order1", "RED-CHAIR", 12),
+        model.OrderLine("order1", "RED-TABLE", 13),
+        model.OrderLine("order2", "BLUE-LIPSTICK", 14),
+    ]
+    assert session.query(model.OrderLine).all() == expected
 
+
+def test_orderline_mapper_can_save_lines(session):
+    new_line = model.OrderLine("order1", "DECORATIVE-WIDGET", 12)
+    session.add(new_line)
+    session.commit()
+
+    rows = list(session.execute(text('SELECT orderid, sku, qty FROM "order_lines"')))
+    assert rows == [("order1", "DECORATIVE-WIDGET", 12)]
+```
+```shell
+============================================================ test session starts =============================================================
+platform darwin -- Python 3.10.13, pytest-8.1.1, pluggy-1.4.0 -- /Users/user/Library/Caches/pypoetry/virtualenvs/architecture-python-XYM1j5R_-py3.10/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/user/personal/architecture-python
+configfile: pyproject.toml
+plugins: anyio-4.3.0, cov-4.1.0
+collected 2 items                                                                                                                            
+
+tests/chapter02/test_orm.py::test_orderline_mapper_can_load_lines PASSED                                                               [ 50%]
+tests/chapter02/test_orm.py::test_orderline_mapper_can_save_lines PASSED                                                               [100%]
+
+============================================================= 2 passed in 0.02s =============================================================
+```
+
+- 
 
 ## 5. 저장소 패턴 소개
 
+- **저장소 패턴**: 영속적 저장소를 추상화한 것, 모든 데이터가 메모리 상에 존재하는 것처럼 가정해 데이터 접근과 관련된 세부사항을 감춤
+```python
+import all_my_data
 
+def create_a_batch():
+    batch = Batch(...)
+    all_my_data.batches.add(batch)
+
+def modify_a_batch(batch_id, new_quantity):
+    batch = all_my_data.batches.get(batch_id)
+    batch.change_initial_quantity(new_quantity)
+```
+- 메모리 상에서 존재한다는 가정으로 수정시 따로 save() 할 필요가 없음
 ### 5.1 추상화한 저장소
+
+- 가장 간단한 추상 저장소를 설계하면  `add()` 와 `get()` 이 존재해야함
+```python
+class AbstractRepository(abc.ABC):
+    @abc.abstractmethod  #(1)
+    def add(self, batch: model.Batch):
+        raise NotImplementedError  #(2)
+
+    @abc.abstractmethod
+    def get(self, reference) -> model.Batch:
+        raise NotImplementedError
+```
 
 ### 5.2 트레이드 오프란 무엇인가?
 
