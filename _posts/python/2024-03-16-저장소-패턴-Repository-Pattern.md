@@ -111,7 +111,9 @@ class Allocation(Base):
 
 ### 4.2 의존성 역전: 모델에 의존하는 ORM
 
-- 
+- 바로 스키마를 별도로 정의하고 스키마 - 도메인 모델을 상호 변환하는 매퍼를 활용
+	- 이러한 맵퍼를 고전적 맵퍼라고 함
+	- 
 
 ```python
 from sqlalchemy import Table, MetaData, Column, Integer, String, Date, ForeignKey
