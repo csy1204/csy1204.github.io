@@ -11,21 +11,24 @@ mermaid: true
 ---
 
 **저장소 패턴**
+
 - 데이터 저장소를 더 간단히 추상화한 것
 - 모델 계층과 데이터 계층을 분리하여 데이터 베이스의 복잡성을 감춤
-
 
 ![](https://i.imgur.com/sllTGRo.png)
 > 출처: [Repository Pattern (cosmicpython.com)](https://www.cosmicpython.com/book/chapter_02_repository.html)
 
 ## 1. 도메인 모델 영속화 (Persisting Our Domain Model)
+
 - 이전 장에서 작성한 도메인 모델은 테스트 하기 쉽지만, 점차 DB에 붙이고 API를 실행해야한다면 테스트와 유지보수하기가 어려워짐
 - 앞으로 어떻게 이상적인 모델과 외부 상태를 연결하는 방법을 살펴봄
 - 어떤 방식으로든 **영속적인 저장소, 즉 데이터베이스가 필요함**
 
 ## 2. 의사코드: 무엇이 필요할까?
+
 - 간단한 Pseudo Code 작성
 - OrderLine을 추출하여 DB에서 배치를 불러와야함, 그리고 다시 배치를 업데이트 해야함
+
 ```python
 @flask.route.gubbins
 def allocate_endpoint():
@@ -44,12 +47,13 @@ def allocate_endpoint():
 | 1. Layered Architecture              | 2. Onion Architecture                |
 | ------------------------------------ | ------------------------------------ |
 | ![](https://i.imgur.com/btD0GVP.png) | ![](https://i.imgur.com/jnV6ULA.png) |
+
 - 앞서 많이 본 계층 아키텍쳐에서 양파 아키텍쳐로의 변화는 도메인 모델 (가운데 계층)이 그 어떤 의존성도 가지지 않는 것을 목적으로 함
 - 화살표가 의존성의 방향이라고 본다면 `Domain Model`에선 어떤 화살표도 나가지 않음, 다른 레이어가 Model에 의존하는 역전 관계
 - django의 MVC 구조는 서로 간의 밀접한 관계를 맺고 있음
 ![](https://i.imgur.com/3slSHI6.png)
-> [MVC - MDN Web Docs Glossary: Definitions of Web-related terms | MDN (mozilla.org)](https://developer.mozilla.org/en-US/docs/Glossary/MVC)
 
+> [MVC - MDN Web Docs Glossary: Definitions of Web-related terms | MDN (mozilla.org)](https://developer.mozilla.org/en-US/docs/Glossary/MVC)
 
 > 이러한 아키텍쳐가 꼭 포트와 어댑터 패턴, 헥사고날 아키텍쳐와 같은가? 거의 같은 개념이고 의존 관계의 역전이 중요한 포인트이다.
 {: .prompt-info }
@@ -58,20 +62,21 @@ def allocate_endpoint():
 
 ```mermaid
  classDiagram
-	Batch <-- OrderLine
-	class Batch {
-		reference
-		sku
-		eta
-		_purchased_quantity
-		_allocations
-	}
-	class OrderLine {
-		orderid
-		sku
-		qty
-	}
+ Batch <-- OrderLine
+ class Batch {
+  reference
+  sku
+  eta
+  _purchased_quantity
+  _allocations
+ }
+ class OrderLine {
+  orderid
+  sku
+  qty
+ }
 ```
+
 - 위와 같은 모델을 이제 예시로 사용해보자
 
 ### 4.1 '일반적인' ORM 방식: ORM에 의존하는 모델
@@ -109,16 +114,16 @@ class Allocation(Base):
 
 - 보면 알겠지만 과연 이게 편한가? 정말 데이터베이스에 무지하다고 할 수 있을까?
 - 어떤 열에 연결되어 있는데 **어떻게 관심사 분리가 가능할까?**
-	- **이러한 물음의 답이 아래 의존성 역전이다.**
+  - **이러한 물음의 답이 아래 의존성 역전이다.**
 
 ### 4.2 의존성 역전: 모델에 의존하는 ORM
 
 - 바로 스키마를 별도로 정의하고 스키마 - 도메인 모델을 상호 변환하는 매퍼를 활용
-	- 이러한 맵퍼를 고전적 맵퍼라고 함
+  - 이러한 맵퍼를 고전적 맵퍼라고 함
 - 책에 있는 내용은 지금은 deprecated된 코드로 2.0에 맞는 코드로 변환이 필요
 - [ORM Mapped Class Overview — SQLAlchemy 2.0 Documentation](https://docs.sqlalchemy.org/en/20/orm/mapping_styles.html#imperative-mapping)
 
-> Changed in version 2.0: The [`registry.map_imperatively()`](https://docs.sqlalchemy.org/en/20/orm/mapping_api.html#sqlalchemy.orm.registry.map_imperatively "sqlalchemy.orm.registry.map_imperatively") method is now used to create classical mappings. The `sqlalchemy.orm.mapper()` standalone function is effectively removed. 
+> Changed in version 2.0: The [`registry.map_imperatively()`](https://docs.sqlalchemy.org/en/20/orm/mapping_api.html#sqlalchemy.orm.registry.map_imperatively "sqlalchemy.orm.registry.map_imperatively") method is now used to create classical mappings. The `sqlalchemy.orm.mapper()` standalone function is effectively removed.
 {: .prompt-danger }
 
 ```python
@@ -209,6 +214,7 @@ def test_orderline_mapper_can_save_lines(session):
     rows = list(session.execute(text('SELECT orderid, sku, qty FROM "order_lines"')))
     assert rows == [("order1", "DECORATIVE-WIDGET", 12)]
 ```
+
 ```shell
 ============================================================ test session starts =============================================================
 platform darwin -- Python 3.10.13, pytest-8.1.1, pluggy-1.4.0 -- /Users/user/Library/Caches/pypoetry/virtualenvs/architecture-python-XYM1j5R_-py3.10/bin/python
@@ -243,6 +249,7 @@ def modify_a_batch(batch_id, new_quantity):
 ```
 
 - 메모리 상에서 존재한다는 가정으로 수정시 따로 save() 할 필요가 없음
+
 ### 5.1 추상화한 저장소
 
 - 가장 간단한 추상 저장소를 설계하면  `add()` 와 `get()` 이 존재해야함
@@ -265,12 +272,21 @@ class AbstractRepository(abc.ABC):
 
 ### 5.2 트레이드 오프란 무엇인가?
 
+- **항상 필요한 질문: 패턴 선택의 이득과 대가는 무엇인가?**
+- 추상화로 전체적인 복잡성은 낮아지겠지만 지역적인 복잡성은 증가시킴
+- DDD와 의존성 역전에서 저장소 패턴이 가장 채택하기 쉬움 -> 장점이 명확하기 때문
+  - 저장소 계층을 간단하게 추상화할 수 있음
+  - 추상화를 제어할 수 있음
+  - 오브젝트 저장을 더 쉽고 유연하게 할 수 있음
+  - 단위 테스트시 Fake를 쉽게 제공할 수 있음
+
+![](https://i.imgur.com/pVHWR5q.png)
 
 ## 6. 테스트에 사용하는 가짜 저장소를 쉽게 만드는 방법
 
-
 ## 7. 파이썬에서 포트와 어댑터란 무엇인가
-- 
+
+-
 
 ## 8. 마치며
 
@@ -283,5 +299,3 @@ class AbstractRepository(abc.ABC):
 > 앱이 래퍼를 감싸는(?) 단순한 CRUD라면 도메인 모델이나 저장소가 필요로 하지 않음
 
 위와 같은 트레이드 오프를 생각해야하고 복잡성이 낮다면 ORM, 액티브레코드 패턴이 나을 수 있지만, 더 복잡하게 갈 수록 두 패턴보다는 복잡하지만 추후 유지보수성이 좋고 인프라에 대해 유연한 저장소 패턴도 좋은 선택이 될 수 있다.
-
-
