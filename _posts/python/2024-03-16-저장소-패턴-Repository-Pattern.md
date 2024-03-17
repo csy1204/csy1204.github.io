@@ -70,12 +70,14 @@ def allocate_endpoint():
 		qty
 	}
 ```
-- 위와 같은 모델
+- 위와 같은 모델을 이제 예시로 사용해보자
 
 ### 4.1 '일반적인' ORM 방식: ORM에 의존하는 모델
 
 - DB를 다룰 때 SQL를 직접 작성하는 방식 보다는 ORM을 이용함
-- ORM(Object-Relation Mapping) 객체 관계 매핑이라고 불리는 프레임워크로 
+- **ORM(Object-Relation Mapping) 객체 관계 매핑이라고 불리는 프레임워크로 객체(Object)를 SQL의 테이블(Relation)과 연결**을 시켜줘 편한 개발이 가능하게 함
+- ORM이 제공하는 가장 중요한 기능: **영속성 무지(Persistent Ignorance)** 사용자는 DB가 어떻게 작동하는지 몰라도 된다!
+- 기존 모델을 ORM으로 매핑한다면 아래와 같이 변환됨
 
 ```python
 from sqlalchemy import Column, Integer, String, ForeignKey
@@ -103,10 +105,68 @@ class Allocation(Base):
 ...
 ```
 
-
-
+- 보면 알겠지만 과연 이게 편한가? 정말 데이터베이스에 무지하다고 할 수 있을까?
+- 어떤 열에 연결되어 있는데 **어떻게 관심사 분리가 가능할까?**
+	- **이러한 물음의 답이 아래 의존성 역전이다.**
 
 ### 4.2 의존성 역전: 모델에 의존하는 ORM
+
+- 
+
+```python
+from sqlalchemy import Table, MetaData, Column, Integer, String, Date, ForeignKey
+from sqlalchemy.orm import registry, relationship
+
+from src.architecture_python.chapter02.database import  model
+
+
+metadata = MetaData()
+mapper_registry = registry()
+
+order_lines = Table(
+    "order_lines",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("sku", String(255)),
+    Column("qty", Integer, nullable=False),
+    Column("orderid", String(255)),
+)
+
+batches = Table(
+    "batches",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("reference", String(255)),
+    Column("sku", String(255)),
+    Column("_purchased_quantity", Integer, nullable=False),
+    Column("eta", Date, nullable=True),
+)
+
+allocations = Table(
+    "allocations",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("orderline_id", ForeignKey("order_lines.id")),
+    Column("batch_id", ForeignKey("batches.id")),
+)
+
+
+def start_mappers():
+    lines_mapper = mapper_registry.map_imperatively(model.OrderLine, order_lines)
+    mapper_registry.map_imperatively(
+        model.Batch,
+        batches,
+        properties={
+            "_allocations": relationship(
+                lines_mapper, secondary=allocations, collection_class=set,
+            )
+        },
+    )
+
+```
+
+
+
 
 
 ## 5. 저장소 패턴 소개
