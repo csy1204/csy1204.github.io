@@ -7,6 +7,7 @@ tags:
   - Architecture
   - Pattern
   - Repository
+mermaid: true
 ---
 
 **저장소 패턴**
@@ -253,6 +254,11 @@ class AbstractRepository(abc.ABC):
     def get(self, reference) -> model.Batch:
         raise NotImplementedError
 ```
+
+> 여기선 추상 기반 클래스 (Abstract Base Classes)로 했지만 실무에선 무시하기가 너무 쉽다보니 잘 사용하지 않거나 더 복잡해지는 경우가 있음.
+> 그래서 덕 타이핑에 의존하거나 PEP544 프로토콜이 대안이 될 수 있다. 상속보다 조합(Composition)이 좋다면 생각해볼만한 옵션
+> [PEP 544 – Protocols: Structural subtyping (static duck typing) | peps.python.org](https://peps.python.org/pep-0544/)
+{: .prompt-info }
 
 ### 5.2 트레이드 오프란 무엇인가?
 
