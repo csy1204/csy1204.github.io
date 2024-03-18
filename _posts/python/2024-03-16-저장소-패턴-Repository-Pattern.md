@@ -55,6 +55,7 @@ def allocate_endpoint():
 
 > [MVC - MDN Web Docs Glossary: Definitions of Web-related terms | MDN (mozilla.org)](https://developer.mozilla.org/en-US/docs/Glossary/MVC)
 
+
 > 이러한 아키텍쳐가 꼭 포트와 어댑터 패턴, 헥사고날 아키텍쳐와 같은가? 거의 같은 개념이고 의존 관계의 역전이 중요한 포인트이다.
 {: .prompt-info }
 
@@ -230,7 +231,6 @@ tests/chapter02/test_orm.py::test_orderline_mapper_can_save_lines PASSED        
 ============================================================= 2 passed in 0.02s =============================================================
 ```
 
--
 
 ## 5. 저장소 패턴 소개
 
@@ -439,7 +439,7 @@ def create_allocation(
 ```
 
 > 여기서 인상 깊었던 것은 기존의 복잡한 도메인 로직이었던 `allocation` 의 코드 한 줄 바꾸지 않고 DB와 연결하고 서빙까지 스무스하게 이루어졌다는 점이다. 의존성 역전의 장점이 발휘되는 순간이다.
-{: .prompt-success }
+{: .prompt-tip }
 
 ## 6. 테스트에 사용하는 가짜 저장소를 쉽게 만드는 방법
 
