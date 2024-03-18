@@ -438,6 +438,9 @@ def create_allocation(
     return 201
 ```
 
+> 여기서 인상 깊었던 것은 기존의 복잡한 도메인 로직이었던 `allocation` 의 코드 한 줄 바꾸지 않고 DB와 연결하고 서빙까지 스무스하게 이루어졌다는 점이다. 의존성 역전의 장점이 발휘되는 순간이다.
+{: .prompt-success }
+
 ## 6. 테스트에 사용하는 가짜 저장소를 쉽게 만드는 방법
 
 - 사실 이러한 작업의 큰 이점은 아래와 같은 Fake를 쉽게 만들 수 있다는 것에 있다.
@@ -486,8 +489,8 @@ class FakeRepository(AbstractRepository):
 ## 9. 사견
 
 - 책에 있는 코드를 실제로 테스트해보고 FastAPI로 애플레이케이션도 만들어보면서 느낀 가장 큰 장점은 정말로 **Python Class로 instance를 생성하고 수정하는 과정에 DB에 어떤 설정 없이 반영된다는 점이 정말 편했다.**
-- 편한 만큼의 트레이드 오프가 책에서는 복잡한 설정이라고는 하지만 제일 큰 단점은 예상치 못한 성능 이슈라고 생각한다.
-- 이렇게 모든 데이터 생성 및 조회를 숨겨버리면 예상치 못하게 인덱스를 안타거나, 잘못 데이터를 생성/삭제하는 이슈가 생길 수 밖에 없다.  그러다보니 사실 Repository를 작성할 때 DB에 대한 어느정도 기반 지식이 필요한 만큼 장점도 희석되기 마련이다.
+- 편한 만큼의 트레이드 오프가 책에서는 복잡한 설정이라고는 하지만 **제일 큰 단점은 예상치 못한 데이터 생성/삭제 이슈**라고 생각한다.
+- 이렇게 모든 데이터 생성 및 조회를 숨겨버리면 잘못 데이터를 생성/삭제하는 이슈가 생길 수 밖에 없다. 특히 외래키까지 걸려있다면 더더욱. 그리고 사실 Repository를 작성할 때 DB에 대한 어느정도 기반 지식이 필요한 만큼 장점도 희석되기 마련이다.
 - 그럼에도 빛을 발하는 부분은 도메인 관련 로직을 작성하는 부분이 제일 추상화가 잘된다는 점인데 테스트하기도 편해지고 여러모로 도메인이 복잡한 곳이라면 좋은 패턴이겠다는 생각이다.
-- 다른 얘기로 FastAPI의 SQLAlchemy 문서에서도 곧 pydantic v2와 [SQLModel (tiangolo.com)](https://sqlmodel.tiangolo.com/) 를 활용한 문서로 업데이트될 예정이라는 안내가 있었다. 기존의 SQL Alchemy 모델과  Pydantic 스키마를 따로따로 작성해야했던 불편함을 하나로 통일한다는 점에 의의가 있는 프로젝트로 이 SQLModel이 어찌보면 도메인을 잘 표현할 수 있지 않을까란 생각이 든다. 
+- 다른 얘기로 FastAPI의 SQLAlchemy 문서에서도 곧 **pydantic v2와 [SQLModel (tiangolo.com)](https://sqlmodel.tiangolo.com/) 를 활용한 문서로 업데이트될 예정**이라는 안내가 있었다. 기존의 **SQL Alchemy 모델과  Pydantic 스키마를 따로따로 작성해야했던 불편함을 하나로 통일한다는 점에 의의**가 있는 프로젝트로 이 SQLModel이 어찌보면 도메인을 잘 표현할 수 있지 않을까란 생각이 든다. 
 - [Create Rows - Use the Session - INSERT - SQLModel (tiangolo.com)](https://sqlmodel.tiangolo.com/tutorial/insert/#review-all-the-code) , [Read Data - SELECT - SQLModel (tiangolo.com)](https://sqlmodel.tiangolo.com/tutorial/select/#get-a-list-of-hero-objects)문서를 참고했을 때 위와의 차이점은 따로 `session.add` 가 필요하지만 그외에는 너무나 편하게 생성 및 조회가 가능하다. 
