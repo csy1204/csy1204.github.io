@@ -35,7 +35,58 @@ LangChain에선 잘 만들어진 툴도 제공을 하지만 실무에선 그 이
 > https://python.langchain.com/docs/modules/agents/tools/custom_tools 발췌
 
 - Agent에서 Custom Tool은 필요함
-- Tool을 만
+- Tool을 만드는 방법은 여러가지고 3가지 컴포넌트(이름, 설명, 인수 스키마)가 주로 필요
+- 여기선 예시로 2가지 Tool를 만들어봄
+	1. LangChain만 답변을 하는 검색(search) Tool
+	2. 2가지 Int 인자를 곱하는 곱셈(multiply) Tool
+
+```python
+# 일반적으로 아래 모듈 import 필요
+from langchain.pydantic_v1 import BaseModel, Field
+from langchain.tools import BaseTool, StructuredTool, tool
+```
+
+### 2.1 @tool decorator
+- 가장 간단한 방법으로 Function에 데코레이터를 추가함
+	- `name`: 함수 이름으로 지정
+	- `description`: 함수의 docstring이 활용되기 때문에 반드시 지정
+	- `args`: 함수의 parameter를 활용
+
+```python
+@tool
+def search(query: str) -> str:
+    """Look up things online."""
+    return "LangChain"
+```
+```
+search
+search(query: str) -> str - Look up things online.
+{'query': {'title': 'Query', 'type': 'string'}}
+```
+
+```python
+@tool
+def multiply(a: int, b: int) -> int:
+    """Multiply two numbers."""
+    return a * b
+```
+```
+multiply
+multiply(a: int, b: int) -> int - Multiply two numbers.
+{'a': {'title': 'A', 'type': 'integer'}, 'b': {'title': 'B', 'type': 'integer'}}
+```
+
+
+### 2.2 Subclass BaseTool
+
+
+
+### 2.3 StructuredTool dataclass
+
+
+### 2.4 Handling Tool Errors
+
+
 
 
 
