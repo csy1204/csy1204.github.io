@@ -270,6 +270,43 @@ search.run("test")
 - 즉  `OpenAI Tools Agent` 를 사용하면 됨
 
 ```python
+from langchain.tools import BaseTool
+from typing import Union
+
+
+class CircumferenceToolInput(BaseModel):
+    # radius: Union[int, float] = Field(description="the radius of a circle") -> int형 인자로 잘못 넘김
+    radius: float = Field(description="the radius of a circle")
+
+
+class CircumferenceTool(BaseTool):
+    name = "CircumferenceCalculator"  # 'Circumference calculator' does not match '^[a-zA-Z0-9_-]{1,64}$' -
+    description = "use this tool when you need to calculate a circumference using the radius of a circle"
+    args_schema: Type[BaseModel] = CircumferenceToolInput
+    # return_direct: bool = True #  Tools that have `return_direct=True` are not allowed in multi-action agents (type=value_error)
+
+    def _run(
+        self,
+        radius: float,
+        run_manager: Optional[CallbackManagerForToolRun] = None,
+    ):
+        """Use the tool."""
+        """
+        Add run_manager: Optional[CallbackManagerForToolRun] = None
+        to child implementations to enable tracing,
+        """
+        print(f"Result of Tool: {radius} -> {float(radius) * 2.0 * pi}")
+        return float(radius) * 2.0 * pi
+
+    def _arun(
+        self,
+        radius: float,
+        run_manager: Optional[AsyncCallbackManagerForToolRun] = None,
+    ):
+        raise NotImplementedError("This tool does not support async")
+```
+
+```python
 from langchain import hub
 from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain_community.tools.tavily_search import TavilySearchResults
@@ -277,4 +314,47 @@ from langchain_openai import ChatOpenAI
 
 # Get the prompt to use - you can modify this!
 prompt = hub.pull("hwchase17/openai-tools-agent")
+tools = [CircumferenceTool()]
+
+agent = create_openai_tools_agent(llm, tools, prompt)
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+agent_executor.invoke({"input": "what is LangChain?"})
 ```
+
+```python
+agent_executor.invoke(
+    {
+        "input": "can you calculate the circumference of a circle that has a radius of 7.81mm"
+    }
+)
+```
+
+```python
+> Entering new AgentExecutor chain... Invoking: `CircumferenceCalculator` with `{'radius': 7.81}` Result of Tool: 7 -> 43.982297150257104 43.982297150257104The circumference of a circle with a radius of 7.81 mm is approximately 43.98 mm. > Finished chain.
+
+{'input': 'can you calculate the circumference of a circle that has a radius of 7.81mm', 'output': 'The circumference of a circle with a radius of 7.81 mm is approximately 43.98 mm.'}
+```
+
+```python
+> Entering new AgentExecutor chain... Invoking: `CircumferenceCalculator` with `{'radius': 7.81}` Result of Tool: 7.81 -> 49.071677249072565 49.071677249072565The circumference of a circle with a radius of 7.81 mm is approximately 49.07 mm. > Finished chain.
+
+{'input': 'can you calculate the circumference of a circle that has a radius of 7.81mm', 'output': 'The circumference of a circle with a radius of 7.81 mm is approximately 49.07 mm.'}
+```
+
+- 매우 잘 사용하고 있지만, 초반에 input schema에서 radius를 [int|float]형으로 잡았더니 int로 변환해서 넣는 오류가 계속 발생함 -> 결국 float 하나로 통일해야 문제가 해결됨
+- 웬만하면 input type을 하나로 통일하는 것이 알아듣기 쉬운 듯
+- 다만 이렇게만 보면 내부적으로 어떻게 동작하는지 알기가 어려워 Trace를 살펴보니 LangSmith로 제공함
+
+```python
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_API_KEY"] = LANGCHAIN_API_KEY
+```
+
+> Trace 화면
+
+![](https://i.imgur.com/uYlzfIe.png)
+
+- 이렇게 보니 어떤 방식으로 Call 오고가고, 전체적인 Token도 파악하기가 쉬웠음
+- 아쉬운건 결국 유료 서비스라 LangChain이 어디서 수익모델을 잡는지 알 수 있었음
+
+[Function calling - OpenAI API](https://platform.openai.com/docs/guides/function-calling)
