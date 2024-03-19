@@ -170,7 +170,10 @@ print(multiply.return_direct)
 
 ### 2.3 StructuredTool dataclass
 
-- 
+- 위 2가지를 섞은 방식인 `StructuredTool` 를 사용하여 만들 수 있음
+- 간단하게 만들 수도 있고, BaseTool처럼 스키마 지정까지 복잡하게도 할 수 있음
+- 다만 간단하게 쓸거면 @tool 데코레이터가 확실히 좋고, 굳이 BaseTool를 대체할만큼 간단한지도 의문
+
 ```python
 def search_function(query: str):
     return "LangChain"
@@ -183,18 +186,95 @@ search = StructuredTool.from_function(
     # coroutine= ... <- you can specify an async method if desired as well
 )
 ```
+
+```python
+class CalculatorInput(BaseModel):
+    a: int = Field(description="first number")
+    b: int = Field(description="second number")
+
+
+def multiply(a: int, b: int) -> int:
+    """Multiply two numbers."""
+    return a * b
+
+
+calculator = StructuredTool.from_function(
+    func=multiply,
+    name="Calculator",
+    description="multiply numbers",
+    args_schema=CalculatorInput,
+    return_direct=True,
+    # coroutine= ... <- you can specify an async method if desired as well
+)
+```
+
 ### 2.4 Handling Tool Errors
 
+- Tool에서 발생한 특수한 에러를 `ToolException` 으로 처리할 수 있음
+- raise하면 agent는 작동을 멈출 수도 있고, `handle_tool_error` 를 어떻게 설정했느냐에 따라 agent가 그 다음을 처리할 수도 있음
+
+```python
+from langchain_core.tools import ToolException
+
+
+def search_tool1(s: str):
+    raise ToolException("The search tool1 is not available.")
+    
+search = StructuredTool.from_function(  
+func=search_tool1,  
+name="Search_tool1",  
+description="A bad tool",  
+)  
+  
+search.run("test")
+```
+
+> 위 예시로 실행하면 바로 Exception이 발생하면서 에러 종료
+
+```python
+def _handle_error(error: ToolException) -> str:
+    return (
+        "The following errors occurred during tool execution:"
+        + error.args[0]
+        + "Please try another tool."
+    )
+
+
+search = StructuredTool.from_function(
+    func=search_tool1,
+    name="Search_tool1",
+    description="A bad tool",
+    handle_tool_error=_handle_error,
+)
+
+search.run("test")
+```
+
+> 위 예시처럼 handle_error가 있다면 에러 메시지가 반환될 뿐 정상 종료
 
 
 
-
-
-
-
-
-> 
 
 [2303.17580.pdf (arxiv.org)](https://arxiv.org/pdf/2303.17580.pdf)
 
 
+
+
+
+
+
+
+## How to use it
+
+- Tool은 Agent와 같이 사용해야한다. LangChain에서는 여러가 Agent Type을 제공하지만 최근 OpenAI Functions Agent는 tool로 바뀌면서 deprecated되었음
+- 즉  `OpenAI Tools Agent` 를 사용하면 됨
+
+```python
+from langchain import hub
+from langchain.agents import AgentExecutor, create_openai_tools_agent
+from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_openai import ChatOpenAI
+
+# Get the prompt to use - you can modify this!
+prompt = hub.pull("hwchase17/openai-tools-agent")
+```
