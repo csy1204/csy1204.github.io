@@ -476,8 +476,9 @@ image_cap_agent_executor.invoke({"input": f"이미지에 있는 걸 모두 말�
 
 > `이 이미지에는 나무에 앉아 있는 원숭이가 있습니다.` 라는 로컬 머신을 번역한 대답을 생성
 
-- 
-
+- 기존의 LLM이 가지고 있는 한계를 여러 특화 모델을 결합하여 생성할 수 있다는 것에 의의가 있지만 결국 여러번 핑퐁을 하면서 많은 토큰을 사용할 수 밖에 없음
+- 목적이 명확하다면 처음부터 같이 보내주는게 나은 방법이고 이러한 방법은 결국 여러가지 태스크를 동시에 처리하기 위한 범용성이 필요한 경우에 유용
+- 여기선 OpenAI의 프로토콜이 지배적으로 작용하지만 오픈소스에서도 어떻게 풀 수 있을지 고민이 필요해보임
 
 ## Reference
 - [Building Custom Tools for LLM Agents | Pinecone](https://www.pinecone.io/learn/series/langchain/langchain-tools/)
