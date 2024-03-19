@@ -50,7 +50,7 @@ from langchain.tools import BaseTool, StructuredTool, tool
 - 가장 간단한 방법으로 Function에 데코레이터를 추가함
 	- `name`: 함수 이름으로 지정
 	- `description`: 함수의 docstring이 활용되기 때문에 반드시 지정
-	- `args`: 함수의 parameter를 활용
+	- `args_schema`: 함수의 parameter를 활용
 
 ```python
 @tool
@@ -76,10 +76,86 @@ multiply(a: int, b: int) -> int - Multiply two numbers.
 {'a': {'title': 'A', 'type': 'integer'}, 'b': {'title': 'B', 'type': 'integer'}}
 ```
 
+- Pydantic BaseModel를 활용해 스키마를 설정할 수 있음
+
+```python
+class SearchInput(BaseModel):
+    query: str = Field(description="should be a search query")
+
+
+@tool("search-tool", args_schema=SearchInput, return_direct=True)
+def search(query: str) -> str:
+    """Look up things online."""
+    return "LangChain"
+```
 
 ### 2.2 Subclass BaseTool
 
+- BaseTool를 상속받아 서브클래스로 만들 수 있음
+- 가장 최대한의 제어를 할 수 있지만 공수가 더 많이 듬
 
+```python
+from typing import Optional, Type
+
+from langchain.callbacks.manager import (
+    AsyncCallbackManagerForToolRun,
+    CallbackManagerForToolRun,
+)
+
+
+class SearchInput(BaseModel):
+    query: str = Field(description="should be a search query")
+
+
+class CustomSearchTool(BaseTool):
+    name = "custom_search"
+    description = "useful for when you need to answer questions about current events"
+    args_schema: Type[BaseModel] = SearchInput
+
+    def _run(
+        self, query: str, run_manager: Optional[CallbackManagerForToolRun] = None
+    ) -> str:
+        """Use the tool."""
+        return "LangChain"
+
+    async def _arun(
+        self, query: str, run_manager: Optional[AsyncCallbackManagerForToolRun] = None
+    ) -> str:
+        """Use the tool asynchronously."""
+        raise NotImplementedError("custom_search does not support async")
+
+```
+
+
+
+```python
+
+class CalculatorInput(BaseModel):
+    a: int = Field(description="first number")
+    b: int = Field(description="second number")
+
+
+class CustomCalculatorTool(BaseTool):
+    name = "Calculator"
+    description = "useful for when you need to answer questions about math"
+    args_schema: Type[BaseModel] = CalculatorInput
+    return_direct: bool = True
+
+    def _run(
+        self, a: int, b: int, run_manager: Optional[CallbackManagerForToolRun] = None
+    ) -> str:
+        """Use the tool."""
+        return a * b
+
+    async def _arun(
+        self,
+        a: int,
+        b: int,
+        run_manager: Optional[AsyncCallbackManagerForToolRun] = None,
+    ) -> str:
+        """Use the tool asynchronously."""
+        raise NotImplementedError("Calculator does not support async")
+```
 
 ### 2.3 StructuredTool dataclass
 
