@@ -9,6 +9,8 @@ tags:
   - LLM
   - LangChain
 ---
+> 본 글은 
+
 [Agent](https://python.langchain.com/docs/modules/agents/) 는 LLM에서 가장 파워풀하고 매력적인 접근 방식 중 하나이고 이러한 관심이 다양한 AI의 유즈케이스를 만들어냈습니다. Agent가 여러 툴에 접근할 수 있도록 하면서 무한한 가능성을 부여받았습니다. 툴을 통해 LLM은 검색, 계산, 코드 실행, 그리고 그 이상을 할 수 있죠
 
 LangChain에선 잘 만들어진 툴도 제공을 하지만 실무에선 그 이상의 요구사항이 너무나 많습니다. 즉 우리 만의 커스텀한 툴이 필요하다는 말입니다.
@@ -253,17 +255,6 @@ search.run("test")
 > 위 예시처럼 handle_error가 있다면 에러 메시지가 반환될 뿐 정상 종료
 
 
-
-
-[2303.17580.pdf (arxiv.org)](https://arxiv.org/pdf/2303.17580.pdf)
-
-
-
-
-
-
-
-
 ## How to use it
 
 - Tool은 Agent와 같이 사용해야한다. LangChain에서는 여러가 Agent Type을 제공하지만 최근 OpenAI Functions Agent는 tool로 바뀌면서 deprecated되었음
@@ -355,6 +346,22 @@ os.environ["LANGCHAIN_API_KEY"] = LANGCHAIN_API_KEY
 ![](https://i.imgur.com/uYlzfIe.png)
 
 - 이렇게 보니 어떤 방식으로 Call 오고가고, 전체적인 Token도 파악하기가 쉬웠음
-- 아쉬운건 결국 유료 서비스라 LangChain이 어디서 수익모델을 잡는지 알 수 있었음
+- 아쉬운건 결국 유료 서비스라 LangChain이 어디서 수익모델을 잡는지 파악하게 된 계기
+- Kubernetes로 Self-Hosted Server도 제공하고 있지만 Enterprise Plan을 위한 용도
+- 오픈소스로 비슷한 툴이 있을까 찾아보니 두 개가 대표적
+	- [langfuse/langfuse: 🪢 Open source LLM engineering platform. Observability, metrics, evals, prompt management 🍊YC W23 🤖 SDKs + integrations for Typescript, Python, OpenAI, Langchain, LlamaIndex, Litellm (github.com)](https://github.com/langfuse/langfuse)
+	- [Arize-ai/phoenix: AI Observability & Evaluation (github.com)](https://github.com/Arize-ai/phoenix)
+	- Reddit 글을 보니 자체 임베딩이 있다면 phoenix가 좋고, 그 외는 MIT 라이센스로 완전한 오픈소스인 langfuse를 추천함
+
+
+## More Advanced Tool Usage
+
+- [2303.17580.pdf (arxiv.org)](https://arxiv.org/pdf/2303.17580.pdf) 를 참고하여 로컬 모델의 인퍼런스를 활용하는 방법을 소개
+
+
+
+
+
+
 
 [Function calling - OpenAI API](https://platform.openai.com/docs/guides/function-calling)
