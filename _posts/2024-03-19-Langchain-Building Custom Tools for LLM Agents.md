@@ -9,14 +9,13 @@ tags:
   - LLM
   - LangChain
 ---
-> 본 글은 
+> 본 글은 Pinecone의 [Building Custom Tools for LLM Agents | Pinecone](https://www.pinecone.io/learn/series/langchain/langchain-tools/) 를 참고하여 작성하였습니다. 대부분의 코드가 현재 작동하지 않는 옛날 코드라 코드부분을 주로 최신화 하였습니다.
 
 [Agent](https://python.langchain.com/docs/modules/agents/) 는 LLM에서 가장 파워풀하고 매력적인 접근 방식 중 하나이고 이러한 관심이 다양한 AI의 유즈케이스를 만들어냈습니다. Agent가 여러 툴에 접근할 수 있도록 하면서 무한한 가능성을 부여받았습니다. 툴을 통해 LLM은 검색, 계산, 코드 실행, 그리고 그 이상을 할 수 있죠
 
 LangChain에선 잘 만들어진 툴도 제공을 하지만 실무에선 그 이상의 요구사항이 너무나 많습니다. 즉 우리 만의 커스텀한 툴이 필요하다는 말입니다.
 
 이번 챕터에서는 커스텀 툴을 어떻게 만들고 랭체인에서 사용할 수 있을지 알아볼 것입니다. 간단한 예시부터 좀 더 복잡한 예시까지 다루며 어떻게 ML모델에게 더 많은 능력을 부여할 수 있을지 알아봅시다.
-
 
 ## LangChain에서 설명하는 Tool
 
@@ -357,11 +356,132 @@ os.environ["LANGCHAIN_API_KEY"] = LANGCHAIN_API_KEY
 ## More Advanced Tool Usage
 
 - [2303.17580.pdf (arxiv.org)](https://arxiv.org/pdf/2303.17580.pdf) 를 참고하여 로컬 모델의 인퍼런스를 활용하는 방법을 소개
+- ChatGPT 3.5는 이미지를 볼 수 없기 때문에 로컬에서 이미지를 한번 파싱한 정보를 제공하여 이미지 정보를 알 수 있게함
+
+```python
+import torch
+from transformers import BlipProcessor, BlipForConditionalGeneration
+
+# 사용할 이미지 캡션 모델
+hf_model = "Salesforce/blip-image-captioning-large"
+```
+
+- 아무래도 맥에서 그냥하면 느리기 때문에 MPS를 활용
+
+```python
+# Using MPS Backend
+# ref: https://pytorch.org/docs/stable/notes/mps.html
+
+if not torch.backends.mps.is_available():
+    if not torch.backends.mps.is_built():
+        print(
+            "MPS not available because the current PyTorch install was not "
+            "built with MPS enabled."
+        )
+    else:
+        print(
+            "MPS not available because the current MacOS version is not 12.3+ "
+            "and/or you do not have an MPS-enabled device on this machine."
+        )
+else:
+    mps_device = torch.device("mps")
+```
+```python
+processor = BlipProcessor.from_pretrained(hf_model)
+model = BlipForConditionalGeneration.from_pretrained(hf_model).to(mps_device)
+```
+
+```python
+import requests
+from PIL import Image
+
+img_url = "https://images.unsplash.com/photo-1616128417859-3a984dd35f02?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2372&q=80"
+image = Image.open(requests.get(img_url, stream=True).raw).convert("RGB")
+image
+```
+
+![](https://images.unsplash.com/photo-1616128417859-3a984dd35f02?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2372&q=80)
+
+ > 위처럼 이미지를 캡셔닝할 수 있는 환경을 준비한다
 
 
+```python
+class ImageCaptionToolInput(BaseModel):
+    url: str = Field(description="Image URL")
 
 
+class ImageCaptionTool(BaseTool):
+    name = "ImageCaptioner"
+    description = """use this tool when given the URL of an image that you'd like to be 
+    described. It will return a simple caption describing the image."""
+    args_schema: Type[BaseModel] = ImageCaptionToolInput
+
+    def _run(self, url: str):
+        image = Image.open(requests.get(img_url, stream=True).raw).convert("RGB")
+        inputs = processor(image, return_tensors="pt").to(mps_device)
+        out = model.generate(**inputs, max_new_tokens=20)
+        caption = processor.decode(out[0], skip_special_tokens=True)
+        return caption
+
+    def _arun(self, query: str):
+        raise NotImplementedError("This tool does not support async")
+```
+
+> Image Caption 툴 작성
+
+```python
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+
+new_sys_msg = "You are very powerful assistant, but bad at captioning images."
+
+use_tool_prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", new_sys_msg),
+        ("user", "{input}"),
+        MessagesPlaceholder(variable_name="agent_scratchpad"),
+    ]
+)
+
+tools = [ImageCaptionTool()]
+
+image_cap_agent = A.create_openai_tools_agent(llm, tools, use_tool_prompt)
+image_cap_agent_executor = A.AgentExecutor(
+    agent=image_cap_agent, tools=tools, verbose=True
+)
+```
+
+> 이미지 캡션 기능을 추가한 Agent 생성
+
+```python
+img_url = "https://images.unsplash.com/photo-1616128417859-3a984dd35f02?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2372&q=80"
+
+image_cap_agent_executor.invoke({"input": f"what is in this image?\n{img_url}"})
+```
+
+```python
+> Entering new AgentExecutor chain... Invoking: `ImageCaptioner` with `{'url': '[https://images.unsplash.com/photo-1616128417859-3a984dd35f02?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2372&q=80'}`](https://images.unsplash.com/photo-1616128417859-3a984dd35f02?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2372&q=80%27}`) there is a monkey that is sitting in a treeThe image contains a monkey sitting in a tree. > Finished chain.
+
+{'input': 'what is in this image?\[nhttps://images.unsplash.com/photo-1616128417859-3a984dd35f02?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2372&q=80](nhttps://images.unsplash.com/photo-1616128417859-3a984dd35f02?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2372&q=80)', 'output': 'The image contains a monkey sitting in a tree.'}
+```
+
+> 생성 결과: 원숭이를 잘 탐지함
+
+더 나아가 한글로 질의
+
+```python
+image_cap_agent_executor.invoke({"input": f"이미지에 있는 걸 모두 말해줘\n{img_url}"})
+
+{'input': '이미지에 있는 걸 모두 말해줘\[nhttps://images.unsplash.com/photo-1616128417859-3a984dd35f02?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2372&q=80](nhttps://images.unsplash.com/photo-1616128417859-3a984dd35f02?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2372&q=80)', 'output': '이 이미지에는 나무에 앉아 있는 원숭이가 있습니다.'}
+```
+
+> `이 이미지에는 나무에 앉아 있는 원숭이가 있습니다.` 라는 로컬 머신을 번역한 대답을 생성
+
+- 
 
 
-
-[Function calling - OpenAI API](https://platform.openai.com/docs/guides/function-calling)
+## Reference
+- [Building Custom Tools for LLM Agents | Pinecone](https://www.pinecone.io/learn/series/langchain/langchain-tools/)
+- [Tools | 🦜️🔗 Langchain](https://python.langchain.com/docs/modules/agents/tools/)
+- https://docs.smith.langchain.com/cookbook/tracing-examples/nesting-tools 
+- [Function calling - OpenAI API](https://platform.openai.com/docs/guides/function-calling)
+- [Open-source LLMs as LangChain Agents (huggingface.co)](https://huggingface.co/blog/open-source-llms-as-agents)
