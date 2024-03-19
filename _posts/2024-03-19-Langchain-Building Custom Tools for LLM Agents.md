@@ -93,6 +93,7 @@ def search(query: str) -> str:
 
 - BaseTool를 상속받아 서브클래스로 만들 수 있음
 - 가장 최대한의 제어를 할 수 있지만 공수가 더 많이 듬
+- 써보니 비동기 처리나 여러면에서 유리함
 
 ```python
 from typing import Optional, Type
@@ -126,8 +127,6 @@ class CustomSearchTool(BaseTool):
 
 ```
 
-
-
 ```python
 
 class CalculatorInput(BaseModel):
@@ -157,9 +156,33 @@ class CustomCalculatorTool(BaseTool):
         raise NotImplementedError("Calculator does not support async")
 ```
 
+```python
+multiply = CustomCalculatorTool()
+print(multiply.name)
+print(multiply.description)
+print(multiply.args)
+print(multiply.return_direct)
+
+# Calculator 
+# useful for when you need to answer questions about math 
+# {'a': {'title': 'A', 'description': 'first number', 'type': 'integer'}, 'b': {'title': 'B', 'description': 'second number', 'type': 'integer'}} True
+```
+
 ### 2.3 StructuredTool dataclass
 
+- 
+```python
+def search_function(query: str):
+    return "LangChain"
 
+
+search = StructuredTool.from_function(
+    func=search_function,
+    name="Search",
+    description="useful for when you need to answer questions about current events",
+    # coroutine= ... <- you can specify an async method if desired as well
+)
+```
 ### 2.4 Handling Tool Errors
 
 
