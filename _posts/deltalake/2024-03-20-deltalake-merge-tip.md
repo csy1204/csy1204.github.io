@@ -10,19 +10,17 @@ tags:
   - Performance
 ---
 
-
 ## Merge Overview
 
 - Phase 1: 조건에 맞는 Rows가 있는 Input File를 찾고 파일을 읽어 키가 같은지 검증 (InnerJoin)
 - Phase 2: 접근한 파일을 다시 읽고 새로운 파일로 작성함, 이때 새로운 Row를 추가하거나 업데이트함
 - Phase 3: 델타 프로토콜을 이용해서 원자적으로 (atomically) 파일을 지우고 추가함
 
-여기서 Phase 2가 핵심입니다.
+여기서 Phase 2가 핵심입니다. Phase2를 세분화하면 아래와 같이 나누어집니다. 즉 머지 방식에 따라 동작이 달라집니다.
 
 - Insert Only Merge  -> leftAntiJoin
 - Matched Only Clause -> right OuterJoin
 - Else -> fullOuterJoin
-
 
 ## Merge Basics
 
@@ -43,5 +41,35 @@ tags:
 
 
 ### Prunes
-- 프룬 주스가 아니다.
-- 
+- 실제 작업할 파티션/파일을 줄이는 것에 목적이 있음
+- 방법은 merge조건에서 해당 파티션,파일 조건을 명시하면 됨
+	- partion: 파티션 키
+	- file: zorder키
+
+### Partition Prune Example
+
+- 아래 처럼 파티션키에 필터링 조건을 넣으면 파티션이 해당 키로 걸러져 2개만 읽고, 쓰는 것을 알 수 있음
+
+![](https://i.imgur.com/R6vSwnb.png)
+
+### File Prune Example
+
+- 위 예시에서 Z-Order 키를 추가하여 파티션 내에서도 일부 파일만으로 Pruning할 수 있음
+
+
+![](https://i.imgur.com/GiIXyFf.png)
+
+> https://youtu.be/o2k9PICWdx0?si=uKj8CWcvsXghzh1C&t=716
+
+
+## Operation Metrics
+- `%sql describe history tableName` 으로 확인 가능
+- Databricks 6.5+ 부터 향상된 메트릭 제공
+- 주의깊게 봐야할 메트릭:
+	- `numTargetRowsCopied` **(특히 중요!)**
+	- `numOutputBytes`
+	- `numTargertFileAdded`
+	- `numTargetRowsInserted/Updated/Delete`
+- 특히 `numTargetRowsCopied` 가 중요한데 전체 row를 커버할 정도로 매우 많다면 Z-Order를 설정하거나 파티션키 재설정을 고민해볼 필요가 있음
+
+
