@@ -33,5 +33,15 @@ tags:
 ![](https://i.imgur.com/Goo3bdy.png)
 > [Delta Lake: Optimizing Merge (youtube.com)](https://www.youtube.com/watch?v=o2k9PICWdx0) 
 
+- 먼저 InnerJoin이 1.1min 정도로 빠르게 수행되고, 그 다음 OuterJoin이 수행, 마지막으로 S3에 Write가 가장 오래 걸림
+- 여기서 더 빠르게 하고 싶다면? Partition Pruning & File Pruning -> 결국 대상이 될 파일 수를 줄이자가 핵심임
+- 필요없는 Dataframe은 지워 메모리 확보 -> `df.unpersist, System.gc`
+- [spark.databricks.delta.optimize.maxFileSize](https://books.japila.pl/delta-lake-internals/configuration-properties/#spark.databricks.delta.optimize.maxFileSize)  를 조절하여 델타 파일 사이즈를 조절 (default 1GB)
+	- Write Intensive: 32MB 이하
+	- Read Intensive: 1GB (기본값)
+- Spark에서 자주 사용되던 룰을 적용할 수 있음: partitionSize, shuffle partitions, etc
 
+
+### Prunes
+- 프룬 주스가 아니다.
 - 
