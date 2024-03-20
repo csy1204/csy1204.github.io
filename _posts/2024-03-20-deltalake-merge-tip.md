@@ -13,7 +13,7 @@ tags:
 
 ## Merge Overview
 
-- Phase 1: 조건에 맞는 Rows가 있는 Input File를 찾고 파일을 읽어 같은지 검증 (InnerJoin)
+- Phase 1: 조건에 맞는 Rows가 있는 Input File를 찾고 파일을 읽어 키가 같은지 검증 (InnerJoin)
 - Phase 2: 접근한 파일을 다시 읽고 새로운 파일로 작성함, 이때 새로운 Row를 추가하거나 업데이트함
 - Phase 3: 델타 프로토콜을 이용해서 원자적으로 (atomically) 파일을 지우고 추가함
 
@@ -27,7 +27,11 @@ tags:
 ## Merge Basics
 
 - 같은 머지에 다른 인스턴스에서 성능 차이가 많이 남
-- 같은 코어수를 기준으로 16x Large와 2xLarge
+- 같은 코어수를 기준으로 16xLarge(약 64 Core)와 2xLarge(약 8 Core)를 비교했을 때 2xLarge가 약 2배정도로 좋았음
+- 이는 분산 처리의 힘으로 보이고 Executer 수가 8배 차이나기 때문임
 
 ![](https://i.imgur.com/Goo3bdy.png)
+> [Delta Lake: Optimizing Merge (youtube.com)](https://www.youtube.com/watch?v=o2k9PICWdx0) 
 
+
+- 
